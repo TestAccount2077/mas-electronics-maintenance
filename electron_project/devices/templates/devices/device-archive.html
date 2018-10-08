@@ -1,0 +1,17 @@
+{% extends 'devices/device-base.html' %}
+{% load static %}
+
+{% block Title %}أرشيف الأجهزة{% endblock %}
+
+{% block table_id %}device-archive-table{% endblock %}
+
+{% block rows %}
+{% endblock %}
+
+{% block extra_headers %}
+    <th>فى المخزن</th>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'devices/js/device-archive.js' %}"></script>
+{% endblock %}

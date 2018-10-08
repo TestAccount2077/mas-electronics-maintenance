@@ -1,0 +1,9 @@
+__pycache__
+node_modules
+assets
+MyPackage
+build
+notes.txt
+release-builds
+FLOWCHART
+electron_project/package

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الصيانة{% endblock %}
+
+{% block js %}
+
+    <script type="text/javascript">
+        var inventorySerials = {{ inventory_serials|safe }},
+            spareparts = {{ spareparts|safe }},
+            devicesAndSpareparts = {{ devices_and_spareparts|safe }};
+    </script>
+
+    <script src="{% static 'devices/js/maintenance.js' %}"></script>
+
+{% endblock %}
+
+{% block body %}
+<table id="maintenance-table" class="table table-bordered" dir="rtl" data-item-type='maintenance'>
+    
+    <thead style="text-align:center">
+        <tr>
+            <th>رقم اللوحة</th>
+            <th class="sortable" data-criteria='company'><span class='sort-carat'>&#9660;</span>اسم الشركة</th>
+            <th class="sortable" data-criteria='type'><span class='sort-carat'>&#9660;</span>نوع الجهاز</th>
+            <th class="sortable" data-criteria='date'><span class='sort-carat'>&#9660;</span>التاريخ</th>
+            <th>مسئول الصيانة</th>
+            <th>مظاهر العيب</th>
+            <th>ما تم تغييره</th>
+            <th>ملاحظات</th>
+            <th>التفاصيل</th>
+            <th>حذف</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+        {% for device in maintenance_devices %}
+        <tr data-pk="{{ device.pk }}" data-serial="{{ device.serial_number }}" data-receipt-pk="{{ device.reception_receipt_id }}">
+            <td data-input-type="text" data-field-name="serial_number">{{ device.serial_number }}</td>
+            <td data-input-type="text" data-field-name="company_name" data-company="{{ device.company_name }}">{{ device.company_name }}</td>
+            <td data-input-type="text" data-field-name="device_type" data-type="{{ device.device_type }}" data-pk="{{ device.pk }}">{{ device.device_type }}</td>
+            <td data-input-type="date" data-field-name="entrance_date">{{ device.entrance_date }}</td>
+            <td class="{{ device.assignee_class }}" data-input-type="text" data-field-name="assignee">{{ device.assignee }}</td>
+            <td class="{{ device.flaws_class }}" data-input-type="text" data-field-name="flaws">{{ device.flaws }}</td>
+            <td><a href="#" class="sparepart-edit">تعديل</a></td>
+            <td class="{{ device.notes_class }} {% if device.notes_class == 'editable-locked' %}truncate{% endif %}" data-input-type="text" data-field-name="notes">{{ device.notes }}</td>
+            <td><a href="{% url 'devices:device-detail' device.serial_number %}" class="device-detail-button" data-device-id="{{ device.pk }}" data-device-serial="{{ device.serial_number }}">ذهاب</a></td>
+            <td><img src="{% static 'images/remove.png' %}" class="icon remove-maintenance-item" data-pk="{{ device.pk }}"></td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td class="input-td" data-input-type="text" data-field-name="serial_number" style="height:38px"><input id="maintenance-serial-input" class="table-input"></td>
+            <td data-input-type="text" data-field-name="company_name"></td>
+            <td data-input-type="text" data-field-name="device_type"></td>
+            <td data-input-type="date" data-field-name="entrance_date"></td>
+            <td class="maintenance-empty last" data-input-type="text" data-field-name="assignee"></td>
+            <td class="maintenance-empty last" data-input-type="text" data-field-name="flaws"></td>
+            <td></td>
+            <td class="maintenance-empty last" data-input-type="text" data-field-name="notes"></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+    
+</table>
+
+<div id='sparepart-edit-modal' class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title people-modal-title">اضافة/تعديل قطع الغيار</h5>
+            </div>
+            <div class="modal-body">
+                <div id="sparepart-container" style="margin: -10px 10px 30px 0"></div>
+                <input style="margin-bottom:20px" type="text" class="form-control" id="edit-sparepart-input" placeholder="قطعة الغيار">
+                <input style="margin-bottom:20px" type="text" class="form-control" id="edit-count-input" placeholder="الكمية">
+            </div>
+            <div class="modal-footer" style="background-color:#F3F6F8;border-radius:6px">
+                <br>
+                <button type="button" class="btn btn-default cancel-btn" data-dismiss="modal">انهاء</button>
+                <button id='add-sparepart-btn' type="button" class="btn btn-success">اضافة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id='login-modal' class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title people-modal-title">تسجيل الدخول</h5>
+            </div>
+            <div class="modal-body">
+                
+                <input style="margin-bottom:20px" type="password" class="form-control" id="login-password" placeholder="كلمة المرور">
+                
+            </div>
+            <div class="modal-footer" style="background-color:#F3F6F8;border-radius:6px">
+                <br>
+                <!--<button type="button" class="btn btn-default cancel-btn" data-dismiss="modal">الغاء</button>-->
+                <button id='login-btn' type="button" class="btn btn-success">دخول</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
