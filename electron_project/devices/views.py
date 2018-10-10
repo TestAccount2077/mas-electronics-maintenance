@@ -193,14 +193,14 @@ def remove_maintenance_device(request):
         
         context = {}
         
-        if device.sparepart and device.sparepart_count:
+        if device.spareparts.exists():
             
-            sparepart = device.sparepart
-            
-            sparepart.count += device.sparepart_count
-            sparepart.save()
-            
-            context['sparepart'] = sparepart.as_dict()
+            for sparepart_relation in device.spareparts.all():
+                
+                sparepart = sparepart_relation.sparepart
+                
+                sparepart.count += sparepart_relation.count
+                sparepart.save()
         
         device.delete()
         

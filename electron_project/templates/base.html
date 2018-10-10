@@ -70,6 +70,13 @@
                     <button class="btn btn-success" id="back" style="margin-top: 6px;margin-left: 30px;" onclick="history.back();">رجوع</button>
                 </ul>
                 
+                <ul class="nav navbar-nav navbar-right">
+                    <div id="connection-container">
+                        <span id="connection-dot"></span>
+                        <span id="connection-label" style="margin-left: 5px">غير متصل</span>
+                  </div>
+                </ul>
+                
             </div><!-- /.navbar-collapse -->
           </div><!-- /.container-fluid -->
         </nav>
@@ -211,6 +218,7 @@
         
         <script src="{% static 'js/sweetalert.min.js' %}"></script>
         <script src="{% static 'js/selectables.js' %}"></script>
+        <script src="{% static 'js/reconnecting-websocket.min.js' %}"></script>
         
         <!--<script src="{% static 'accounts/js/dashboard.js' %}"></script>-->
         <script src="{% static 'accounts/js/functions.js' %}"></script>

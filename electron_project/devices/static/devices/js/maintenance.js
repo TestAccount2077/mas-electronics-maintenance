@@ -3,12 +3,41 @@ var devicePk,
     username,
     currentView = 'maintenance';
 
-const socket = new WebSocket('wss://qwepoiasdkljxcmv.herokuapp.com/MAS/ws/maintenance-connection/');
+const socket = new ReconnectingWebSocket('wss://qwepoiasdkljxcmv.herokuapp.com/MAS/ws/maintenance-connection/');
+
+socket.onconnecting = function () {
+
+    $('#connection-dot').css('background-color', 'yellow');
+    $('#connection-label').text('جار الاتصال');
+
+}
+
+socket.onopen = function () {
+
+    $('#connection-dot').css('background-color', '#2ca831');
+    $('#connection-label').text('متصل');
+
+}
+
+socket.onclose = function (error) {
+    $('#connection-dot').css('background-color', 'red');
+    $('#connection-label').text('غير متصل');
+}
+
+socket.onerror = function () {
+    $('#connection-dot').css('background-color', 'red');
+    $('#connection-label').text('غير متصل');
+}
 
 $(document).ready(function () {
     
     $('#login-modal').modal({backdrop: 'static', keyboard: false});
     $('#login-modal').modal('show');
+    
+    setTimeout(function () {
+        $('#login-password').focus();
+    }, 700);
+    
     
     $('.maintenance-empty:not(.last)').attr('contenteditable', true);
     
@@ -50,6 +79,8 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
                 action: 'create',
                 device
             }));
+            
+            devicesAndSpareparts[device.pk] = [];
             
             var element = $('#maintenance-table tbody tr:last');
             
@@ -155,22 +186,20 @@ $(document).on('focusout', '.maintenance-empty', function (e) {
 
         success: function (data) {
             
-            if (data.invalid && (fieldName === 'sparepart_name' || fieldName === 'sparepart_count')) {
-
-                iziToast.error({
-                    title: 'خطأ',
-                    message: 'لا توجد قطع غيار كافية من هذا النوع',
-                    position: 'topRight',
-                    zindex: 99999
-                });
-
-                cell.text(cell.attr('data-value'));
-
-                return;
-
-            }
+            socket.send(JSON.stringify({
+                
+                sender: 'maintenance',
+                action: 'update',
+                
+                data: {
+                    serial: cell.parent().data('serial'),
+                    fieldName,
+                    content
+                }
+                
+            }));
             
-            else if (fieldName === 'notes') {
+            if (fieldName === 'notes') {
                 cell.addClass('truncate');
             }
 
@@ -236,11 +265,20 @@ $(document).on('click', '.remove-maintenance-item', function (e) {
         
         $.ajax({
             url: 'devices/ajax/remove-maintenance-device/',
+            
             data: {
-                pk: pk
+                pk
             },
 
             success: function (data) {
+                
+                socket.send(JSON.stringify({
+                    sender: 'maintenance',
+                    action: 'delete',
+                    
+                    serialNumber
+                    
+                }));
 
                 parent.fadeOut(300, function () {
                     $(this).remove();
@@ -489,5 +527,13 @@ $(document).on('click', '#login-btn', function (e) {
         
         error: generateAlerts
     });
+    
+});
+
+$(document).on('keypress', '#login-password', function (e) {
+    
+    if (e.which === 13) {
+        $('#login-btn').click();
+    }
     
 });

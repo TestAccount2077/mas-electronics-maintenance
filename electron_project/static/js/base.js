@@ -1030,12 +1030,14 @@ $(document).on('focusout', '.editable-unlocked', function (e) {
     if (fieldName === 'formatted_balance_change') {
         content = cell.attr('data-sign') + content;
     }
+    
+    var pk = cell.parent().attr('data-pk');
 
     $.ajax({
         url: 'ajax/update-cell-content/',
 
         data: {
-            pk: cell.parent().attr('data-pk'),
+            pk,
             type: itemType,
             fieldName,
             content
@@ -1063,11 +1065,25 @@ $(document).on('focusout', '.editable-unlocked', function (e) {
                 else if (fieldName === 'notes') {
                     cell.addClass('truncate');
                 }
+                
+                socket.send(JSON.stringify({
+                    
+                    sender: 'maintenance',
+                    action: 'update',
+                    
+                    data: {
+                        serial: cell.parent().data('serial'),
+                        fieldName,
+                        content
+                    }
+                    
+                }));
+                
             }
-
+            
             else if (itemType === 'sparepart') {
                 if (data.count_lt_minimum) {
-
+                    
                     iziToast.warning({
                         title: 'تحذير',
                         message: 'الكمية أقل من الحد الأدنى',
@@ -1214,7 +1230,7 @@ $(document).on('click', '#confirm-new-password-btn', function (e) {
     });
 });
 
-startTimer();
+//startTimer();
 
 function reorderRows(table) {
     
