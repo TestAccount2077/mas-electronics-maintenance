@@ -1037,15 +1037,15 @@ $(document).on('focusout', '.editable-unlocked', function (e) {
         data: {
             pk: cell.parent().attr('data-pk'),
             type: itemType,
-            fieldName: fieldName,
-            content: content
+            fieldName,
+            content
         },
 
         success: function (data) {
 
             if (itemType === 'maintenance') {
                 
-                if (data.invalid && (fieldName === 'sparepart_name' || fieldName === 'sparepart_count')) {
+                if (data.invalid && (fieldName === 'sparepart_count')) {
                     
                     iziToast.error({
                         title: 'خطأ',
@@ -1060,37 +1060,9 @@ $(document).on('focusout', '.editable-unlocked', function (e) {
                     
                 }
                 
-                else if (fieldName === 'sparepart_name') {
-                    cell.attr('data-value', cell.text());
-                }
-                
                 else if (fieldName === 'notes') {
                     cell.addClass('truncate');
                 }
-                
-                if (data.spareparts && data.spareparts.length) {
-                    $.each(data.spareparts, function (index, sparepart) {
-
-                        $('#sparepart-inventory-table tbody tr[data-pk=' + sparepart.pk + '] td[data-field-name=count]').text(sparepart.count);
-                        
-                        if (!index) {
-                            
-                            if (sparepart.count < sparepart.minimum_qty) {
-                                
-                                iziToast.warning({
-                                    title: 'تحذير',
-                                    message: 'الكمية أقل من الحد الأدنى',
-                                    position: 'topRight',
-                                    zindex: 99999
-                                });
-                                
-                            }
-                            
-                        }
-                        
-                    });
-                }
-
             }
 
             else if (itemType === 'sparepart') {
