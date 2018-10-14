@@ -8,6 +8,7 @@
     <script type="text/javascript">
         var inventorySerials = {{ inventory_serials|safe }},
             spareparts = {{ spareparts|safe }},
+            passwords = {{ passwords|safe }},
             devicesAndSpareparts = {{ devices_and_spareparts|safe }};
     </script>
 
@@ -33,34 +34,7 @@
         </tr>
     </thead>
     
-    <tbody>
-        {% for device in maintenance_devices %}
-        <tr data-pk="{{ device.pk }}" data-serial="{{ device.serial_number }}" data-receipt-pk="{{ device.reception_receipt_id }}">
-            <td data-input-type="text" data-field-name="serial_number">{{ device.serial_number }}</td>
-            <td data-input-type="text" data-field-name="company_name" data-company="{{ device.company_name }}">{{ device.company_name }}</td>
-            <td data-input-type="text" data-field-name="device_type" data-type="{{ device.device_type }}" data-pk="{{ device.pk }}">{{ device.device_type }}</td>
-            <td data-input-type="date" data-field-name="entrance_date">{{ device.entrance_date }}</td>
-            <td class="{{ device.assignee_class }}" data-input-type="text" data-field-name="assignee">{{ device.assignee }}</td>
-            <td class="{{ device.flaws_class }}" data-input-type="text" data-field-name="flaws">{{ device.flaws }}</td>
-            <td><a href="#" class="sparepart-edit">تعديل</a></td>
-            <td class="{{ device.notes_class }} {% if device.notes_class == 'editable-locked' %}truncate{% endif %}" data-input-type="text" data-field-name="notes">{{ device.notes }}</td>
-            <td><a href="{% url 'devices:device-detail' device.serial_number %}" class="device-detail-button" data-device-id="{{ device.pk }}" data-device-serial="{{ device.serial_number }}">ذهاب</a></td>
-            <td><img src="{% static 'images/remove.png' %}" class="icon remove-maintenance-item" data-pk="{{ device.pk }}"></td>
-        </tr>
-        {% endfor %}
-        <tr>
-            <td class="input-td" data-input-type="text" data-field-name="serial_number" style="height:38px"><input id="maintenance-serial-input" class="table-input"></td>
-            <td data-input-type="text" data-field-name="company_name"></td>
-            <td data-input-type="text" data-field-name="device_type"></td>
-            <td data-input-type="date" data-field-name="entrance_date"></td>
-            <td data-input-type="text" data-field-name="assignee"></td>
-            <td class="maintenance-empty last" data-input-type="text" data-field-name="flaws"></td>
-            <td></td>
-            <td class="maintenance-empty last" data-input-type="text" data-field-name="notes"></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
+    <tbody></tbody>
     
 </table>
 

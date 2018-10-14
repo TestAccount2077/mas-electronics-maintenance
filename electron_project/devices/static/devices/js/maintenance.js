@@ -1,33 +1,8 @@
 var devicePk,
     editedCount,
     username,
+    password,
     currentView = 'maintenance';
-
-const socket = new ReconnectingWebSocket('wss://qwepoiasdkljxcmv.herokuapp.com/MAS/ws/maintenance-connection/');
-
-socket.onconnecting = function () {
-
-    $('#connection-dot').css('background-color', 'yellow');
-    $('#connection-label').text('جار الاتصال');
-
-}
-
-socket.onopen = function () {
-
-    $('#connection-dot').css('background-color', '#2ca831');
-    $('#connection-label').text('متصل');
-
-}
-
-socket.onclose = function (error) {
-    $('#connection-dot').css('background-color', 'red');
-    $('#connection-label').text('غير متصل');
-}
-
-socket.onerror = function () {
-    $('#connection-dot').css('background-color', 'red');
-    $('#connection-label').text('غير متصل');
-}
 
 $(document).ready(function () {
     
@@ -37,9 +12,6 @@ $(document).ready(function () {
     setTimeout(function () {
         $('#login-password').focus();
     }, 700);
-    
-    
-    $('.maintenance-empty:not(.last)').attr('contenteditable', true);
     
     $('#devices-submenu')
         .show()
@@ -73,12 +45,6 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
         },
 
         success: function (device) {
-            
-            socket.send(JSON.stringify({
-                sender: 'maintenance',
-                action: 'create',
-                device
-            }));
             
             devicesAndSpareparts[device.pk] = [];
             
@@ -136,6 +102,13 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
             $('#maintenance-serial-input').autocomplete({
                 source: inventorySerials
             });
+            
+            socket.send(JSON.stringify({
+                sender: 'maintenance',
+                action: 'create',
+                device
+            }));
+            
         },
 
         error: function (error) {
@@ -176,15 +149,44 @@ $(document).on('focusout', '.maintenance-empty', function (e) {
     
     $.ajax({
         url: 'ajax/update-cell-content/',
-
+        
         data: {
             pk: cell.parent().attr('data-pk'),
             type: 'maintenance',
             fieldName: fieldName,
             content: content
         },
-
+        
         success: function (data) {
+            
+            if (fieldName === 'notes') {
+                cell.addClass('truncate');
+            }
+            
+            if (data.spareparts && data.spareparts.length) {
+                $.each(data.spareparts, function (index, sparepart) {
+                    
+                    $('#sparepart-inventory-table tbody tr[data-pk=' + sparepart.pk + '] td[data-field-name=count]').text(sparepart.count);
+                    
+                    if (!index) {
+                        
+                        if (sparepart.count < sparepart.minimum_qty) {
+                            
+                            iziToast.warning({
+                                title: 'تحذير',
+                                message: 'الكمية أقل من الحد الأدنى',
+                                position: 'topRight',
+                                zindex: 99999
+                            });
+                        }
+                    }
+                });
+            }
+            
+            cell
+                .removeClass('maintenance-empty')
+                .addClass('editable-locked')
+                .attr('contenteditable', 'false');
             
             socket.send(JSON.stringify({
                 
@@ -198,38 +200,6 @@ $(document).on('focusout', '.maintenance-empty', function (e) {
                 }
                 
             }));
-            
-            if (fieldName === 'notes') {
-                cell.addClass('truncate');
-            }
-
-            if (data.spareparts && data.spareparts.length) {
-                $.each(data.spareparts, function (index, sparepart) {
-
-                    $('#sparepart-inventory-table tbody tr[data-pk=' + sparepart.pk + '] td[data-field-name=count]').text(sparepart.count);
-
-                    if (!index) {
-
-                        if (sparepart.count < sparepart.minimum_qty) {
-
-                            iziToast.warning({
-                                title: 'تحذير',
-                                message: 'الكمية أقل من الحد الأدنى',
-                                position: 'topRight',
-                                zindex: 99999
-                            });
-
-                        }
-
-                    }
-
-                });
-            }
-            
-            cell
-                .removeClass('maintenance-empty')
-                .addClass('editable-locked')
-                .attr('contenteditable', 'false');
             
         },
         
@@ -271,14 +241,6 @@ $(document).on('click', '.remove-maintenance-item', function (e) {
             },
 
             success: function (data) {
-                
-                socket.send(JSON.stringify({
-                    sender: 'maintenance',
-                    action: 'delete',
-                    
-                    serialNumber
-                    
-                }));
 
                 parent.fadeOut(300, function () {
                     $(this).remove();
@@ -293,9 +255,17 @@ $(document).on('click', '.remove-maintenance-item', function (e) {
                 $('#maintenance-serial-input').autocomplete({
                     source: inventorySerials
                 });
+                
+                socket.send(JSON.stringify({
+                    sender: 'maintenance',
+                    action: 'delete',
+                    
+                    serialNumber
+                    
+                }));
+                
             }
         });
-        
     }
     
     executeAfterPassword(removeMaintenanceItem);
@@ -368,12 +338,28 @@ function addSparepart() {
         url: 'ajax/add-sparepart-item/',
         
         data: {
-            devicePk: devicePk,
-            sparepart: sparepart,
-            count: count
+            devicePk,
+            sparepart,
+            count
         },
         
-        success: addItemSuccess,
+        success: function (data) {
+            
+            addItemSuccess(data);
+            
+            socket.send(JSON.stringify({
+                sender: 'maintenance',
+                action: 'add-sparepart',
+                
+                data: {
+                    devicePk,
+                    serial: data.device_serial,
+                    sparepart,
+                    count
+                }
+            }));
+            
+        },
         
         error: generateAlerts
     });
@@ -386,9 +372,10 @@ $(document).on('click', '.sparepart-delete', function (e) {
     
     $.ajax({
         url: 'ajax/remove-sparepart-item/',
+        
         data: {
-            pk: pk,
-            devicePk: devicePk
+            pk,
+            devicePk
         },
         
         success: function (data) {
@@ -397,6 +384,17 @@ $(document).on('click', '.sparepart-delete', function (e) {
             
             devicesAndSpareparts[devicePk] = data.spareparts;
             
+            socket.send(JSON.stringify({
+                
+                sender: 'maintenance',
+                action: 'remove-sparepart',
+                
+                data: {
+                    serial: data.serial,
+                    sparepartName: data.sparepart_name
+                }
+                
+            }));
             
         }
         
@@ -435,9 +433,9 @@ $(document).on('click', '.sparepart-inner-edit', function (e) {
                 url: 'ajax/add-sparepart-item/',
                 
                 data: {
-                    devicePk: devicePk,
-                    sparepart: sparepart,
-                    count: count
+                    devicePk,
+                    sparepart,
+                    count
                 },
                 
                 success: addItemSuccess
@@ -470,42 +468,47 @@ function addItemSuccess(data) {
             position: 'topRight',
             zindex: 99999
         });
-
+        
     }
-
+    
     var sparepart = data.sparepart,
         element = $(`.sparepart-item[data-pk=${ sparepart.id }]`);
-
+    
     if (element.length) {
         element.children(':first').children(':nth-child(4)').text(sparepart.count);
     }
-
+    
     else {
-
+        
         var element = composeSparepartElement(sparepart);
-
+        
         $('#sparepart-container').append(element);
-
+        
     }
     
 }
 
 $(document).on('click', '#login-btn', function (e) {
     
-    var password = $('#login-password').val();
+    password = $('#login-password').val();
     
     if (!password) {
+        
         iziToast.error({
             title: 'خطأ',
             message: 'يرجى ادخال كلمة المرور',
             position: 'topRight',
             zindex: 99999
         });
+        
         return;
+        
     }
         
     $.ajax({
+        
         url: '/ajax/worker-login/',
+        
         data: {
             password
         },
@@ -522,6 +525,50 @@ $(document).on('click', '#login-btn', function (e) {
             });
             
             $('#login-modal').modal('hide');
+            
+            $.each(data.devices, function (index, device) {
+                
+                var element = `
+                    <tr data-pk="${ device.pk }" data-serial="${ device.serial_number }" data-receipt-pk="${ device.reception_receipt_id }" data-username='${ device.assignee }'>
+                        <td data-input-type="text" data-field-name="serial_number">${ device.serial_number }</td>
+                        <td data-input-type="text" data-field-name="company_name" data-company="${ device.company_name }">${ device.company_name }</td>
+                        <td data-input-type="text" data-field-name="device_type" data-type="${ device.device_type }" data-pk="${ device.pk }">${ device.device_type }</td>
+                        <td data-input-type="date" data-field-name="entrance_date">${ device.entrance_date }</td>
+                        <td data-input-type="text" data-field-name="assignee">${ device.assignee }</td>
+                        <td class="${ device.flaws_class }" data-input-type="text" data-field-name="flaws">${ device.flaws }</td>
+                        <td><a href="#" class="sparepart-edit">تعديل</a></td>
+                        <td class="${ device.notes_class } {% if device.notes_class == 'editable-locked' %}truncate{% endif %}" data-input-type="text" data-field-name="notes">${ device.notes }</td>
+                        <td><a href="{% url 'devices:device-detail' device.serial_number %}" class="device-detail-button" data-device-id="${ device.pk }" data-device-serial="${ device.serial_number }">ذهاب</a></td>
+                        <td><img src="/static/images/remove.png" class="icon remove-maintenance-item" data-pk="${ device.pk }"></td>
+                    </tr>
+                `;
+                
+                $('#maintenance-table tbody').append(element);
+                
+            });
+            
+            var element = `
+                <tr>
+                    <td class="input-td" data-input-type="text" data-field-name="serial_number" style="height:38px"><input id="maintenance-serial-input" class="table-input"></td>
+                    <td data-input-type="text" data-field-name="company_name"></td>
+                    <td data-input-type="text" data-field-name="device_type"></td>
+                    <td data-input-type="date" data-field-name="entrance_date"></td>
+                    <td data-input-type="text" data-field-name="assignee"></td>
+                    <td class="maintenance-empty last" data-input-type="text" data-field-name="flaws"></td>
+                    <td></td>
+                    <td class="maintenance-empty last" data-input-type="text" data-field-name="notes"></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            `;
+            
+            $('#maintenance-table tbody').append(element);
+            
+            $('#maintenance-serial-input').autocomplete({
+                source: inventorySerials
+            });
+            
+            $('.maintenance-empty:not(.last)').attr('contenteditable', true);
             
         },
         

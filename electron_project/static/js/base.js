@@ -1,3 +1,56 @@
+const socket = new ReconnectingWebSocket('wss://qwepoiasdkljxcmv.herokuapp.com/MAS/ws/maintenance-connection/');
+
+socket.onmessage = function (data) {
+
+    var data = JSON.parse(data.data),
+        data = JSON.parse(data.data);
+    
+    if (data.sender === 'admin') {
+
+        if (data.action ==='update') {
+            updateMaintenanceDevice(data.data);
+        }
+
+        else if (data.action === 'delete') {
+            removeMaintenanceDevice(data.serialNumber);
+        }
+
+        else if (data.action === 'add-sparepart') {
+            AddSparepart(data.data);
+        }
+
+        else if (data.action == 'remove-sparepart') {
+            removeSparepart(data.data);
+        }
+
+    }
+    
+    else if (data.sender === 'admin-new-receipt') {
+        addReceipt(data.data, data.url);
+    }
+}
+
+socket.onconnecting = function () {
+    $('#connection-dot').css('background-color', 'yellow');
+    $('#connection-label').text('جار الاتصال');
+}
+
+socket.onopen = function () {
+    $('#connection-dot').css('background-color', '#2ca831');
+    $('#connection-label').text('متصل');
+}
+
+socket.onclose = function () {
+    $('#connection-dot').css('background-color', 'red');
+    $('#connection-label').text('غير متصل');
+}
+
+socket.onerror = function (error) {
+    $('#connection-dot').css('background-color', 'red');
+    $('#connection-label').text('غير متصل');
+}
+
+
 var currentValue,
     password,
     pendingToUnlockElement,
@@ -1275,3 +1328,64 @@ $(document).on('click', '#update', function (e) {
         error: generateAlerts
     });
 });
+/*
+$(document).on('click', '#sync', function (e) {
+    
+    $.ajax({
+        
+        url: '/ajax/sync/',
+        
+        success: function (data) {
+            
+            socket.send(JSON.stringify({
+                
+                sender: 'maintenance',
+                action: 'sync',
+                
+                data: {
+                    devices: data.devices,
+                    sparepartRelations: data.sparepart_relations
+                }
+                
+            }));
+            
+        }
+        
+    });
+});
+*/
+
+function addReceipt(Data, url) {
+    
+    $.ajax({
+        url,
+        type: 'POST',
+
+        data: Data,
+        
+        success: function (data) {
+            
+            if (url.includes('reception')) {
+                
+                iziToast.info({
+                    title: 'معلومات',
+                    message: 'تمت اضافة فاتورة استلام جديدة',
+                    position: 'topRight',
+                    zindex: 99999
+                });
+                
+            }
+            
+            else {
+                
+                iziToast.info({
+                    title: 'معلومات',
+                    message: 'تمت اضافة فاتورة تسليم جديدة',
+                    position: 'topRight',
+                    zindex: 99999
+                });
+                
+            }
+        }
+    });
+}

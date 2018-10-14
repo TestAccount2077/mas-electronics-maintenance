@@ -5,6 +5,8 @@ from rest_framework import status
 
 from abstract.utils import get_date_filters, get_abstract_data
 
+from accounts.models import WorkerAccount
+
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import *
@@ -44,6 +46,10 @@ def maintenance_view(request):
     }
     
     data['spareparts'] = [sparepart.name for sparepart in Sparepart.objects.filter(deleted=False)]
+    
+    data['passwords'] = {
+        account.username: account.password for account in WorkerAccount.objects.all()
+    }
     
     return render(request, 'devices/maintenance.html', context=data)
 
@@ -241,7 +247,8 @@ def add_sparepart_item(request):
         sparepart.save()
         
         context = {
-            'sparepart': sparepart_relation.as_dict()
+            'sparepart': sparepart_relation.as_dict(),
+            'device_serial': device.inventory_device.serial_number
         }
         
         if sparepart.count < sparepart.minimum_qty:
@@ -254,7 +261,6 @@ def remove_sparepart_item(request):
     if request.is_ajax():
         
         relation = DeviceSparepartRelation.objects.get(pk=request.GET['pk'])
-        
         sparepart = relation.sparepart
         
         sparepart.count += relation.count
@@ -265,7 +271,9 @@ def remove_sparepart_item(request):
         device = MaintenanceDevice.objects.get(pk=request.GET['devicePk'])
         
         return JsonResponse({
-            'spareparts': [sparepart.as_dict() for sparepart in device.spareparts.all()]
+            'spareparts': [sparepart.as_dict() for sparepart in device.spareparts.all()],
+            'serial': device.inventory_device.serial_number,
+            'sparepart_name': sparepart.name
         })
 
 @csrf_exempt

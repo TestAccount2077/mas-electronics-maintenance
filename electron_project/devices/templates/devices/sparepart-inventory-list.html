@@ -18,7 +18,6 @@
             <th>الكمية</th>
             <th>الحد الأدنى</th>
             <th>التفاصيل</th>
-            <th>حذف</th>
         </tr>
     </thead>
     
@@ -27,26 +26,12 @@
         <tr data-pk="{{ sparepart.pk }}" name='{{ sparepart.name }}'>
             <td></td>
             <td>{{ forloop.counter }}</td>
-            <td class="editable-locked" data-input-type="text" data-field-name="name">{{ sparepart.name }}</td>
-            <td class="editable-locked {{ sparepart.count_lt_min_class }}" data-input-type="number" data-field-name="count">{{ sparepart.count }}</td>
-            <td class="editable-locked" data-input-type="number" data-field-name="minimum_qty">{{ sparepart.minimum_qty }}</td>
+            <td data-input-type="text" data-field-name="name">{{ sparepart.name }}</td>
+            <td class="{{ sparepart.count_lt_min_class }}" data-input-type="number" data-field-name="count">{{ sparepart.count }}</td>
+            <td data-input-type="number" data-field-name="minimum_qty">{{ sparepart.minimum_qty }}</td>
             <td><a href="{{ sparepart.pk }}/">ذهاب</a></td>
-            <td><img src="{% static 'images/remove.png' %}" class="icon remove-sparepart" data-pk="{{ sparepart.pk }}"></td>
         </tr>
         {% endfor %}
-        
-        <tr>
-            <td></td>
-            <td></td>
-            <td data-input-type="text" data-field-name="name" style="height:38px" contenteditable="true"></td>
-            <td data-input-type="number" data-field-name="count" contenteditable="true"></td>
-            <td data-input-type="number" data-field-name="minimum_qty" contenteditable="true"></td>
-            <td>
-                <a href="#" id="sparepart-save-btn">حفظ</a>
-            </td>
-            <td></td>
-        </tr>
-        
     </tbody>
 </table>
 {% endblock %}

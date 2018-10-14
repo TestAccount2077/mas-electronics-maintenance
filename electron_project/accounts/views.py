@@ -145,10 +145,37 @@ def worker_login(request):
         if account.exists():
             
             account = account.first()
-            context['username'] = account.username
+            username = context['username'] = account.username
+            
+            context['devices'] = [
+                device.as_dict() for device in MaintenanceDevice.objects.filter(
+                    inventory_device__delivered=False,
+                    assignee=username
+                )
+            ]
             
             return JsonResponse(context)
         
         else:
             return JsonResponse({'does_not_exist': 'هذا الرقم غير موجود'}, status=status.HTTP_400_BAD_REQUEST)
         
+'''def sync(request):
+    
+    if request.is_ajax():
+        
+        unsynced_devices = MaintenanceDevice.objects.filter(
+            inventory_device__delivered=False,
+            synced=False
+        )
+        
+        unsynced_spareparts = SparepartRelation.objects.filter(synced=False)
+        
+        unsynced_devices.update(synced=True)
+        
+        devices = [device.as_sync_dict() for device in unsynced_devices]
+        spareparts = [relation.as_sync_dict() for relation in unsynced_spareparts]
+        
+        return JsonResponse({
+            'devices': devices,
+            'spareparts': spareparts
+        })'''
