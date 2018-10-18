@@ -90,6 +90,7 @@ class MaintenanceDevice(TimeStampedModel):
     notes = models.CharField(max_length=300, default='')
     
     deleted = models.BooleanField(default=False)
+    synced = models.BooleanField(default=True)
     
     def as_dict(self):
         
@@ -114,9 +115,14 @@ class MaintenanceDevice(TimeStampedModel):
             'notes_class': 'editable-locked' if self.notes else 'maintenance-empty'
         }
         
-        print(data['spareparts'])
-        
         return data
+    
+    def as_sync_dict(self):
+        
+        return {
+            'serial_number': self.inventory_device.serial_number,
+            'assignee': self.assignee
+        }
 
 
 class ArchiveDevice(TimeStampedModel):

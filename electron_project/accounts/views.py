@@ -159,7 +159,7 @@ def worker_login(request):
         else:
             return JsonResponse({'does_not_exist': 'هذا الرقم غير موجود'}, status=status.HTTP_400_BAD_REQUEST)
         
-'''def sync(request):
+def sync(request):
     
     if request.is_ajax():
         
@@ -168,14 +168,10 @@ def worker_login(request):
             synced=False
         )
         
-        unsynced_spareparts = SparepartRelation.objects.filter(synced=False)
+        devices = [device.as_sync_dict() for device in unsynced_devices]
         
         unsynced_devices.update(synced=True)
         
-        devices = [device.as_sync_dict() for device in unsynced_devices]
-        spareparts = [relation.as_sync_dict() for relation in unsynced_spareparts]
-        
         return JsonResponse({
-            'devices': devices,
-            'spareparts': spareparts
-        })'''
+            'devices': devices
+        })

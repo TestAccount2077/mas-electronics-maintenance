@@ -217,10 +217,10 @@ $(document).on('click', '.receipt-save', function (e) {
             
             data: {
                 data: JSON.stringify(data),
-                company: company,
-                date: date,
-                innerRepresentative: innerRepresentative,
-                outerRepresentative: outerRepresentative
+                company,
+                date,
+                innerRepresentative,
+                outerRepresentative
             },
             
             success: function (data) {

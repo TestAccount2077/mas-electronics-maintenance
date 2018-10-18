@@ -158,6 +158,7 @@ def create_maintenance_device(request):
         
         serial_number = request.GET['serialNumber']
         assignee = request.GET['assignee']
+        synced = json.loads(request.GET['connected'])
         
         maintenance_device = MaintenanceDevice.objects.filter(inventory_device__serial_number=serial_number, deleted=False)
         inventory_device = InventoryDevice.objects.filter(serial_number=serial_number, deleted=False, delivered=False)
@@ -186,7 +187,8 @@ def create_maintenance_device(request):
         
         maintenance_device = MaintenanceDevice.objects.create(
             inventory_device=inventory_device,
-            assignee=assignee
+            assignee=assignee,
+            synced=synced
         )
         
         return JsonResponse(maintenance_device.as_dict())

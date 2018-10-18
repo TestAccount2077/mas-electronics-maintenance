@@ -22,6 +22,10 @@ socket.onmessage = function (data) {
         else if (data.action == 'remove-sparepart') {
             removeSparepart(data.data);
         }
+        
+        else if (data.action === 'sync') {
+            sync(data.data);
+        }
 
     }
     
@@ -31,7 +35,7 @@ socket.onmessage = function (data) {
 }
 
 socket.onconnecting = function () {
-    $('#connection-dot').css('background-color', 'yellow');
+    $('#connection-dot').css('background-color', 'orange');
     $('#connection-label').text('جار الاتصال');
 }
 
@@ -1262,7 +1266,7 @@ $(document).on('click', '#confirm-new-password-btn', function (e) {
             password = $('#password').val();
             
             iziToast.success({
-                title: 'Success',
+                title: 'نجاح',
                 message: 'تم حفظ كلمة السر بنجاح',
                 position: 'topRight',
                 zindex: 99999
@@ -1328,32 +1332,50 @@ $(document).on('click', '#update', function (e) {
         error: generateAlerts
     });
 });
-/*
+
 $(document).on('click', '#sync', function (e) {
     
-    $.ajax({
+    if (navigator.onLine) {
         
-        url: '/ajax/sync/',
+        $.ajax({
+
+            url: '/ajax/sync/',
+
+            success: function (data) {
+
+                socket.send(JSON.stringify({
+
+                    sender: 'maintenance',
+                    action: 'sync',
+
+                    data: {
+                        devices: data.devices
+                    }
+
+                }));
+                
+                iziToast.success({
+                    title: 'نجاح',
+                    message: 'تمت المزامنة بنجاح',
+                    position: 'topRight',
+                    zindex: 99999
+                });
+
+            }
+        });
         
-        success: function (data) {
-            
-            socket.send(JSON.stringify({
-                
-                sender: 'maintenance',
-                action: 'sync',
-                
-                data: {
-                    devices: data.devices,
-                    sparepartRelations: data.sparepart_relations
-                }
-                
-            }));
-            
-        }
+    } else {
         
-    });
+        iziToast.error({
+            title: 'خطأ',
+            message: 'لا يتوفر اتصال بالانترنت',
+            position: 'topRight',
+            zindex: 99999
+        });
+        
+    }
+        
 });
-*/
 
 function addReceipt(Data, url) {
     
@@ -1388,4 +1410,52 @@ function addReceipt(Data, url) {
             }
         }
     });
+}
+
+function sync(data) {
+    
+    $.each(data.receptionReceipts, function (index, receipt) {
+        
+        $.ajax({
+            url: '/receipts/ajax/create-reception-receipt/',
+            type: 'POST',
+            data: {
+                data: JSON.stringify(receipt.data),
+                company: receipt.company,
+                date: receipt.date,
+                
+                innerRepresentative: receipt.inner_representative,
+                outerRepresentative: receipt.outer_representative
+            }
+        });
+        
+    });
+    
+    $.each(data.deliveryReceipts, function (index, receipt) {
+        
+        $.ajax({
+            url: '/receipts/ajax/create-delivery-receipt/',
+            type: 'POST',
+            data: {
+                data: JSON.stringify(receipt.data),
+                company: receipt.company,
+                date: receipt.date,
+                
+                innerRepresentative: receipt.inner_representative,
+                outerRepresentative: receipt.outer_representative
+            }
+        });
+        
+    });
+    
+    setTimeout(function () {
+        
+        iziToast.success({
+            title: 'نجاح',
+            message: 'تمت المزامنة بنجاح',
+            position: 'topRight',
+            zindex: 99999
+        });
+        
+    }, 3000);
 }

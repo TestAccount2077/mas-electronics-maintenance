@@ -35,12 +35,15 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
     if (!serialNumber) {
         return;
     }
+    
+    var connected = navigator.onLine;
 
     $.ajax({
         url: 'devices/ajax/create-maintenance-device/',
 
         data: {
-            serialNumber: serialNumber,
+            connected,
+            serialNumber,
             assignee: username
         },
 
@@ -91,7 +94,7 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
                     <td class="maintenance-empty" data-input-type="text" data-field-name="assignee"></td>
                     <td class="maintenance-empty" data-input-type="text" data-field-name="flaws"></td>
                     <td></td>
-                    <td class="maintenance-empt" data-input-type="text" data-field-name="notes"></td>
+                    <td class="maintenance-empty" data-input-type="text" data-field-name="notes"></td>
                     <td></td>
                     <td></td>
                 </tr>`
