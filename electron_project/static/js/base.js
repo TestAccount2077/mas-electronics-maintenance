@@ -23,6 +23,18 @@ socket.onmessage = function (data) {
             removeSparepart(data.data);
         }
         
+        else if (data.action === 'add-sparepart-object') {
+            addSparepartObject(data.data);
+        }
+        
+        else if (data.action === 'update-sparepart-object') {
+            updateSparepartObject(data.data);
+        }
+        
+        else if (data.action === 'delete-sparepart-object') {
+            deleteSparepartObject(data.data);
+        }
+        
         else if (data.action === 'sync') {
             sync(data.data);
         }
@@ -1458,4 +1470,73 @@ function sync(data) {
         });
         
     }, 3000);
+}
+
+function addSparepartObject(data) {
+    
+    $.ajax({
+        url: '/devices/ajax/create-sparepart/',
+        type: 'POST',
+        
+        data: {
+            name: data.name,
+            count: data.count,
+            minimum: data.minimum_qty
+        },
+        
+        success: function (Data) {
+            
+            iziToast.success({
+                title: 'نجاح',
+                message: `تمت اضافة قطعة الغيار ${ data.name }`,
+                position: 'topRight',
+                zindex: 99999
+            });
+            
+        }
+    });
+}
+
+function updateSparepartObject(data) {
+    
+    $.ajax({
+        url: '/accounts/ajax/update-cell-content/',
+        
+        data,
+        
+        success: function (Data) {
+            
+            iziToast.success({
+                title: 'نجاح',
+                message: `تم تعديل قطعة الغيار ${ data.name }`,
+                position: 'topRight',
+                zindex: 99999
+            });
+            
+        }
+        
+    });
+    
+}
+
+function deleteSparepartObject(data) {
+    
+    $.ajax({
+        url: '/devices/ajax/delete-sparepart/',
+        
+        data,
+        
+        success: function (Data) {
+            
+            iziToast.success({
+                title: 'نجاح',
+                message: `تم حذف قطعة الغيار ${ data.name }`,
+                position: 'topRight',
+                zindex: 99999
+            });
+            
+        }
+        
+    });
+    
 }

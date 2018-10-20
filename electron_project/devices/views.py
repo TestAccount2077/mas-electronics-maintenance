@@ -333,8 +333,8 @@ def edit_sparepart(request):
 def delete_sparepart(request):
     
     if request.is_ajax():
-        
-        sparepart = Sparepart.objects.get(pk=request.GET['pk'])
+                
+        sparepart = Sparepart.objects.get(name=request.GET['name'], deleted=False)
         
         sparepart.deleted = True
         sparepart.save()

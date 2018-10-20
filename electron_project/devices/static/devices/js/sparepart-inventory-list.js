@@ -75,9 +75,9 @@ $(document).on('click', '#sparepart-save-btn', function (e) {
         type: 'POST',
         
         data: {
-            name: name,
-            count: count,
-            minimum: minimum
+            name,
+            count,
+            minimum
         },
         
         success: function (sparepart) {

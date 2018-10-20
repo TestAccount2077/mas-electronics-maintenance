@@ -85,12 +85,17 @@ def update_cell_content(request):
         
         data = request.GET
         
-        pk = data['pk']
+        pk = data.get('pk', None)
         item_type = data['type']
         field_name = data['fieldName']
         content = data['content']
         
-        valid, data = utils.update_cell_content(pk, item_type, field_name, content)
+        kwargs = {}
+        
+        if item_type == 'sparepart':
+            kwargs['name'] = data['name']
+        
+        valid, data = utils.update_cell_content(pk, item_type, field_name, content, **kwargs)
         
         if not valid:
             

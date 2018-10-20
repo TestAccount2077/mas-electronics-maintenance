@@ -1,7 +1,7 @@
 from devices.models import *
 
 
-def update_cell_content(pk, item_type, field_name, content):
+def update_cell_content(pk, item_type, field_name, content, **kwargs):
     
     changes = {}
     
@@ -131,7 +131,7 @@ def update_cell_content(pk, item_type, field_name, content):
             
     elif item_type == 'sparepart':
         
-        sparepart_qs = Sparepart.objects.filter(pk=pk)
+        sparepart_qs = Sparepart.objects.filter(name=kwargs['name'])
         sparepart = sparepart_qs.first()
         
         if field_name == 'name':
