@@ -1,11 +1,72 @@
 const socket = new ReconnectingWebSocket('wss://qwepoiasdkljxcmv.herokuapp.com/MAS/ws/maintenance-connection/');
 
+var connected = false;
+
 socket.onmessage = function (data) {
 
     var data = JSON.parse(data.data),
         data = JSON.parse(data.data);
     
+    console.log(data);
+    
+    if (data.action === 'accept-connection') {
+        $('#access-modal').modal('hide');
+    }
+    
+    else if (data.action === 'accept-disconnection') {
+        
+        $('#access-modal').modal({backdrop: 'static', keyboard: false});
+        $('#access-modal').modal('show');
+        
+    }
+    
     if (data.sender === 'admin') {
+        
+        if (data.action === 'connect') {
+            
+            $('#connection-dot').css('background-color', '#2ca831');
+            $('#connection-label').text('متصل');
+            
+            connected = true;
+            
+            socket.send(JSON.stringify({
+                sender: 'maintenance',
+                action: 'accept-connection'
+            }));
+            
+        }
+        
+        else if (data.action === 'accept-connection') {
+            
+            $('#connection-dot').css('background-color', '#2ca831');
+            $('#connection-label').text('متصل');
+            
+            connected = true;
+                        
+        }
+        
+        else if (data.action === 'disconnect') {
+            
+            $('#connection-dot').css('background-color', 'red');
+            $('#connection-label').text('غير متصل');
+            
+            connected = false;
+            
+            socket.send(JSON.stringify({
+                sender: 'maintenance',
+                action: 'accept-disconnection'
+            }));
+            
+        }
+        
+        else if (data.action === 'accept-disconnection') {
+            
+            $('#connection-dot').css('background-color', 'red');
+            $('#connection-label').text('غير متصل');
+            
+            connected = false;
+            
+        }
 
         if (data.action ==='update') {
             updateMaintenanceDevice(data.data);
@@ -49,21 +110,36 @@ socket.onmessage = function (data) {
 socket.onconnecting = function () {
     $('#connection-dot').css('background-color', 'orange');
     $('#connection-label').text('جار الاتصال');
+    $('#access-modal').modal({backdrop: 'static', keyboard: false});
+    $('#access-modal').modal('show');
 }
 
 socket.onopen = function () {
-    $('#connection-dot').css('background-color', '#2ca831');
-    $('#connection-label').text('متصل');
+    
+    this.send(JSON.stringify({
+        sender: 'maintenance',
+        action: 'connect'
+    }));
+    
 }
 
 socket.onclose = function () {
     $('#connection-dot').css('background-color', 'red');
     $('#connection-label').text('غير متصل');
+    
+    $('#access-modal').modal({backdrop: 'static', keyboard: false});
+    $('#access-modal').modal('show');
+    
+    connected = false;
 }
 
 socket.onerror = function (error) {
     $('#connection-dot').css('background-color', 'red');
     $('#connection-label').text('غير متصل');
+    $('#access-modal').modal({backdrop: 'static', keyboard: false});
+    $('#access-modal').modal('show');
+    
+    connected = false;
 }
 
 
@@ -391,6 +467,24 @@ Array.prototype.remove = function () {
     return this;
 };
 
+$(document).ready(function () {
+    
+    $('#access-modal').modal({backdrop: 'static', keyboard: false});
+    $('#access-modal').modal('show');
+    
+    $.ajax({
+        url: '/ajax/check-download/',
+        success: function (data) {
+            
+            if (!data.downloaded) {
+                $('#download').click();
+            }
+            
+        }
+    });
+    
+});
+
 $(document).on('click', '.sortable', function (e) {
     
     var btn = $(this),
@@ -459,7 +553,7 @@ $(document).on('click', '.sortable', function (e) {
                 });
                 
                 var lastRow = body.children(':first');
-                                
+                
                 body.append(lastRow);
                 
             }
@@ -1135,18 +1229,20 @@ $(document).on('focusout', '.editable-unlocked', function (e) {
                     cell.addClass('truncate');
                 }
                 
-                socket.send(JSON.stringify({
-                    
-                    sender: 'maintenance',
-                    action: 'update',
-                    
-                    data: {
-                        serial: cell.parent().data('serial'),
-                        fieldName,
-                        content
-                    }
-                    
-                }));
+                if (connected) {
+                    socket.send(JSON.stringify({
+
+                        sender: 'maintenance',
+                        action: 'update',
+
+                        data: {
+                            serial: cell.parent().data('serial'),
+                            fieldName,
+                            content
+                        }
+
+                    }));
+                }
                 
             }
             
@@ -1299,8 +1395,6 @@ $(document).on('click', '#confirm-new-password-btn', function (e) {
     });
 });
 
-//startTimer();
-
 function reorderRows(table) {
     
     var body = table.children('tbody'),
@@ -1354,24 +1448,26 @@ $(document).on('click', '#sync', function (e) {
             url: '/ajax/sync/',
 
             success: function (data) {
-
-                socket.send(JSON.stringify({
-
-                    sender: 'maintenance',
-                    action: 'sync',
-
-                    data: {
-                        devices: data.devices
-                    }
-
-                }));
                 
-                iziToast.success({
-                    title: 'نجاح',
-                    message: 'تمت المزامنة بنجاح',
-                    position: 'topRight',
-                    zindex: 99999
-                });
+                if (connected) {
+                    socket.send(JSON.stringify({
+
+                        sender: 'maintenance',
+                        action: 'sync',
+
+                        data: {
+                            devices: data.devices
+                        }
+
+                    }));
+                
+                    iziToast.success({
+                        title: 'نجاح',
+                        message: 'تمت المزامنة بنجاح',
+                        position: 'topRight',
+                        zindex: 99999
+                    });
+                }
 
             }
         });
@@ -1388,6 +1484,15 @@ $(document).on('click', '#sync', function (e) {
     }
         
 });
+
+window.onbeforeunload = function () {
+    
+    socket.send(JSON.stringify({
+        sender: 'maintenance',
+        action: 'disconnect'
+    }));
+    
+}
 
 function addReceipt(Data, url) {
     

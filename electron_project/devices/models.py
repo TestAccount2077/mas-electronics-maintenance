@@ -112,17 +112,12 @@ class MaintenanceDevice(TimeStampedModel):
             
             'assignee_class': 'editable-locked' if self.assignee else 'maintenance-empty',
             'flaws_class': 'editable-locked' if self.flaws else 'maintenance-empty',
-            'notes_class': 'editable-locked' if self.notes else 'maintenance-empty'
+            'notes_class': 'editable-locked' if self.notes else 'maintenance-empty',
+            
+            'spareparts': [sparepart.as_dict() for sparepart in self.spareparts.all()]
         }
         
         return data
-    
-    def as_sync_dict(self):
-        
-        return {
-            'serial_number': self.inventory_device.serial_number,
-            'assignee': self.assignee
-        }
 
 
 class ArchiveDevice(TimeStampedModel):

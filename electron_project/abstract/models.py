@@ -29,6 +29,7 @@ class BaseReceipt(TimeStampedModel):
     outer_representative = models.CharField(max_length=300, default='')
     
     date = models.DateField(null=True, blank=True)
+    synced = models.BooleanField(default=True)
     
     class Meta(TimeStampedModel.Meta):
         

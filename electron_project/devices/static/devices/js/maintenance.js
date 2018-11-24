@@ -36,8 +36,6 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
         return;
     }
     
-    var connected = navigator.onLine;
-
     $.ajax({
         url: 'devices/ajax/create-maintenance-device/',
 
@@ -53,7 +51,9 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
             
             var element = $('#maintenance-table tbody tr:last');
             
-            cell.parent().removeClass('input-td');
+            var index = $('#maintenance-table tbody tr').length;
+            
+            cell.parent().removeClass('input-td').prev().text(index);
             cell.remove();
 
             $.each(device, function (key, value) {
@@ -76,14 +76,15 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
             // Opening editable cells
             element.children('.maintenance-empty').attr('contenteditable', true);
             
-            element.children(':nth-child(9)').html('<a href="/devices/' + device.serial_number + '/" class="device-detail-button" data-device-id="' + device.pk + '" data-device-serial="' + device.serial_number + '">ذهاب</a>');
+            element.children(':nth-child(10)').html('<a href="/devices/' + device.serial_number + '/" class="device-detail-button" data-device-id="' + device.pk + '" data-device-serial="' + device.serial_number + '">ذهاب</a>');
             
-            element.children(':nth-child(7)').html('<a href="#" class="sparepart-edit">تعديل</a>');
+            element.children(':nth-child(8)').html('<a href="#" class="sparepart-edit">تعديل</a>');
             
             element.children(':last').append('<img src="/static/images/remove.png" class="icon remove-maintenance-item" data-pk="' + device.pk + '">');
-
+            
             element.after(`
                 <tr>
+                    <td></td>
                     <td class="input-td" data-input-type="text" data-field-name="serial_number" style="height:38px" contenteditable="true">
                         <input id="maintenance-serial-input" class="table-input">
                     </td>
@@ -106,11 +107,13 @@ $(document).on('focusout', '#maintenance-serial-input', function (e) {
                 source: inventorySerials
             });
             
-            socket.send(JSON.stringify({
-                sender: 'maintenance',
-                action: 'create',
-                device
-            }));
+            if (connected) {
+                socket.send(JSON.stringify({
+                    sender: 'maintenance',
+                    action: 'create',
+                    device
+                }));
+            }
             
         },
 
@@ -533,6 +536,7 @@ $(document).on('click', '#login-btn', function (e) {
                 
                 var element = `
                     <tr data-pk="${ device.pk }" data-serial="${ device.serial_number }" data-receipt-pk="${ device.reception_receipt_id }" data-username='${ device.assignee }'>
+                        <td>${ index + 1 }</td>
                         <td data-input-type="text" data-field-name="serial_number">${ device.serial_number }</td>
                         <td data-input-type="text" data-field-name="company_name" data-company="${ device.company_name }">${ device.company_name }</td>
                         <td data-input-type="text" data-field-name="device_type" data-type="${ device.device_type }" data-pk="${ device.pk }">${ device.device_type }</td>
@@ -541,7 +545,7 @@ $(document).on('click', '#login-btn', function (e) {
                         <td class="${ device.flaws_class }" data-input-type="text" data-field-name="flaws">${ device.flaws }</td>
                         <td><a href="#" class="sparepart-edit">تعديل</a></td>
                         <td class="${ device.notes_class } {% if device.notes_class == 'editable-locked' %}truncate{% endif %}" data-input-type="text" data-field-name="notes">${ device.notes }</td>
-                        <td><a href="{% url 'devices:device-detail' device.serial_number %}" class="device-detail-button" data-device-id="${ device.pk }" data-device-serial="${ device.serial_number }">ذهاب</a></td>
+                        <td><a href="../${ device.serial_number }/" class="device-detail-button" data-device-id="${ device.pk }" data-device-serial="${ device.serial_number }">ذهاب</a></td>
                         <td><img src="/static/images/remove.png" class="icon remove-maintenance-item" data-pk="${ device.pk }"></td>
                     </tr>
                 `;
@@ -552,6 +556,7 @@ $(document).on('click', '#login-btn', function (e) {
             
             var element = `
                 <tr>
+                    <td></td>
                     <td class="input-td" data-input-type="text" data-field-name="serial_number" style="height:38px"><input id="maintenance-serial-input" class="table-input"></td>
                     <td data-input-type="text" data-field-name="company_name"></td>
                     <td data-input-type="text" data-field-name="device_type"></td>

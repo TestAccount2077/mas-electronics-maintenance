@@ -173,10 +173,25 @@ def sync(request):
             synced=False
         )
         
-        devices = [device.as_sync_dict() for device in unsynced_devices]
+        devices = [device.as_dict() for device in unsynced_devices]
         
         unsynced_devices.update(synced=True)
         
         return JsonResponse({
             'devices': devices
         })
+
+def check_download(request):
+    
+    if request.is_ajax():
+        
+        downloaded = request.session.get('downloaded', False)
+        
+        context = {
+            'downloaded': downloaded
+        }
+        
+        if not downloaded:
+            request.session['downloaded'] = True
+            
+        return JsonResponse(context)
