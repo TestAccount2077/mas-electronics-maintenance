@@ -222,6 +222,7 @@ def add_sparepart_item(request):
         data = request.GET
         
         name = data['sparepart']
+        d_code = data['dCode']
         count = int(data['count'])
         
         device = MaintenanceDevice.objects.get(pk=data['devicePk'])
@@ -239,11 +240,12 @@ def add_sparepart_item(request):
             sparepart_relation = sparepart_qs.first()
             
             sparepart_relation.count += count
+            sparepart_relation.diagram_code = d_code
             
             sparepart_relation.save()
             
         else:
-            sparepart_relation = device.spareparts.create(sparepart=sparepart, count=count)
+            sparepart_relation = device.spareparts.create(sparepart=sparepart, count=count, diagram_code=d_code)
         
         sparepart.count -= count
         sparepart.save()
