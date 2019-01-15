@@ -48,7 +48,7 @@ def maintenance_view(request):
     data['spareparts'] = [sparepart.name for sparepart in Sparepart.objects.filter(deleted=False)]
     
     data['passwords'] = {
-        account.username: account.password for account in WorkerAccount.objects.all()
+        account.username: account.password for account in WorkerAccount.objects.all() if account.password
     }
     
     return render(request, 'devices/maintenance.html', context=data)
@@ -160,7 +160,7 @@ def create_maintenance_device(request):
         assignee = request.GET['assignee']
         synced = json.loads(request.GET['connected'])
         
-        maintenance_device = MaintenanceDevice.objects.filter(inventory_device__serial_number=serial_number, deleted=False)
+        maintenance_device = MaintenanceDevice.objects.filter(inventory_device__serial_number=serial_number, deleted=False, inventory_device__delivered=False)
         inventory_device = InventoryDevice.objects.filter(serial_number=serial_number, deleted=False, delivered=False)
         
         if maintenance_device.exists():

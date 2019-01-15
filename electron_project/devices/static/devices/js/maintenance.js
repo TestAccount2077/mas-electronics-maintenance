@@ -378,6 +378,7 @@ function addSparepart() {
                     devicePk,
                     serial: data.device_serial,
                     sparepart,
+                    dCode,
                     count
                 }
             }));
